@@ -155,3 +155,28 @@ for i in range(corr.shape[0]):
 ax.set_title("Asset Correlation Matrix (with values)")
 plt.tight_layout()
 st.pyplot(fig2, use_container_width=True)
+aligned = pd.concat([portfolio_returns, benchmark_returns], axis=1).dropna()
+# ---------- V3 Metrics (Return + Risk-adjusted) ----------
+rf_annual = st.sidebar.number_input("Risk-free rate (annual, %)", value=4.0, step=0.5) / 100
+rf_daily = (1 + rf_annual) ** (1/252) - 1
+
+port = aligned["Portfolio"]
+bench = aligned[benchmark]
+
+# Annualized return (approx)
+ann_return_port = (1 + port.mean()) ** 252 - 1
+ann_return_bench = (1 + bench.mean()) ** 252 - 1
+
+# Sharpe (excess return / vol)
+ann_vol_port = port.std() * np.sqrt(252)
+sharpe_port = ((port.mean() - rf_daily) / port.std()) * np.sqrt(252) if port.std() != 0 else np.nan
+
+# Tracking error + Information Ratio
+active = port - bench
+tracking_error = active.std() * np.sqrt(252)
+info_ratio = (active.mean() * 252) / tracking_error if tracking_error != 0 else np.nan
+
+# Best / worst month (using monthly returns)
+monthly = (1 + aligned).resample("M").prod() - 1
+best_month = monthly["Portfolio"].max()
+worst_month = monthly["Portfolio"].min()
