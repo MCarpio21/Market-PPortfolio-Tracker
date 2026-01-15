@@ -163,20 +163,28 @@ rf_daily = (1 + rf_annual) ** (1/252) - 1
 port = aligned["Portfolio"]
 bench = aligned[benchmark]
 
-# Annualized return (approx)
 ann_return_port = (1 + port.mean()) ** 252 - 1
 ann_return_bench = (1 + bench.mean()) ** 252 - 1
 
-# Sharpe (excess return / vol)
 ann_vol_port = port.std() * np.sqrt(252)
 sharpe_port = ((port.mean() - rf_daily) / port.std()) * np.sqrt(252) if port.std() != 0 else np.nan
 
-# Tracking error + Information Ratio
 active = port - bench
 tracking_error = active.std() * np.sqrt(252)
 info_ratio = (active.mean() * 252) / tracking_error if tracking_error != 0 else np.nan
 
-# Best / worst month (using monthly returns)
 monthly = (1 + aligned).resample("M").prod() - 1
 best_month = monthly["Portfolio"].max()
 worst_month = monthly["Portfolio"].min()
+
+st.subheader("V3: Return & Risk-Adjusted Snapshot")
+
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("Ann. Return (Port)", f"{ann_return_port*100:.1f}%")
+c2.metric("Ann. Return (SPY)", f"{ann_return_bench*100:.1f}%")
+c3.metric("Sharpe", f"{sharpe_port:.2f}")
+c4.metric("Tracking Error", f"{tracking_error*100:.1f}%")
+
+c5, c6 = st.columns(2)
+c5.metric("Info Ratio", f"{info_ratio:.2f}")
+c6.metric("Best / Worst Month", f"{best_month*100:.1f}% / {worst_month*100:.1f}%")
